@@ -289,7 +289,12 @@
         </div>
     </div>
 
+    <!-- Add PDF.js library for reading PDF files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
+        // Set PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
         // JavaScript code that makes the website interactive
 
         // Global variables to store current search state
@@ -297,8 +302,18 @@
         let currentSearchTerm = ''; // Current search query
         let searchResults = [];     // Array to store search results
 
-        // Document data - automatically loaded from documents.json file
+        // Document data - automatically scanned from repository files
         let documentsData = [];
+        
+        // List of PDF files to search - just add your PDF filenames here
+        const pdfFiles = [
+            'document1.pdf',
+            'housing-report.pdf',
+            'education-policy.pdf',
+            'inflation-analysis.pdf',
+            'law-enforcement-budget.pdf'
+            // Add your PDF filenames here
+        ];
 
         // Function to handle filter selection
         // This function runs when a user clicks on a filter button
@@ -340,24 +355,67 @@
             }, 500);
         }
 
-        // Function that loads document metadata from documents.json file
+        // Function that loads and extracts text from PDF files
         async function loadDocuments() {
-            try {
-                const response = await fetch('documents.json');
-                if (!response.ok) {
-                    throw new Error('Documents.json not found');
+            documentsData = [];
+            
+            for (const filename of pdfFiles) {
+                try {
+                    // Load PDF file
+                    const response = await fetch(filename);
+                    if (!response.ok) continue;
+                    
+                    const arrayBuffer = await response.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    
+                    // Extract text from all pages
+                    let fullText = '';
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + ' ';
+                    }
+                    
+                    // Auto-detect category from filename and content
+                    let category = 'all';
+                    const testText = (filename + ' ' + fullText).toLowerCase();
+                    
+                    if (testText.includes('housing')) category = 'housing';
+                    else if (testText.includes('education')) category = 'education';
+                    else if (testText.includes('inflation')) category = 'inflation';
+                    else if (testText.includes('law') || testText.includes('enforcement') || testText.includes('police')) {
+                        category = 'law-enforcement';
+                    }
+                    
+                    documentsData.push({
+                        title: filename.replace('.pdf', '').replace(/[-_]/g, ' '),
+                        category: category,
+                        content: fullText.trim(),
+                        date: new Date().toISOString().split('T')[0],
+                        filename: filename
+                    });
+                    
+                    console.log('Loaded PDF:', filename);
+                } catch (error) {
+                    console.log('Could not load PDF:', filename, error);
                 }
-                documentsData = await response.json();
-                console.log('Loaded', documentsData.length, 'documents');
-            } catch (error) {
-                console.error('Error loading documents:', error);
-                // Show error message to user
+            }
+            
+            if (documentsData.length === 0) {
                 document.getElementById('resultsContainer').innerHTML = `
                     <div class="no-results">
-                        <strong>Error loading documents</strong><br>
-                        Make sure you have uploaded a 'documents.json' file with your document metadata.
+                        <strong>No PDFs found</strong><br>
+                        Make sure your PDF files are uploaded and listed in the pdfFiles array.
                         <br><br>
-                        See the GitHub repo README for setup instructions.
+                        <strong>Looking for:</strong><br>
+                        ${pdfFiles.join('<br>')}
+                    </div>
+                `;
+            } else {
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="no-results">
+                        Successfully loaded ${documentsData.length} PDF(s). Enter a search term above to begin searching.
                     </div>
                 `;
             }
