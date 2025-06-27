@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Search Portal</title>
+    <title>Document Search</title>
+    <!-- PDF.js library for reading PDF files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        /* CSS styles to make the website look good */
+        /* Basic styling for the website */
         * {
             margin: 0;
             padding: 0;
@@ -13,549 +15,420 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #333;
-        }
-
-        /* Main container that holds everything */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 20px;
         }
 
-        /* Header section with title */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        /* Search section container */
-        .search-section {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Search section styling */
+        .search-section {
             margin-bottom: 30px;
         }
 
-        /* Search bar styling */
         .search-container {
             position: relative;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
-        .search-input {
+        #searchInput {
             width: 100%;
             padding: 15px 50px 15px 20px;
-            font-size: 1.1rem;
-            border: 2px solid #e1e5e9;
-            border-radius: 50px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
             outline: none;
             transition: all 0.3s ease;
         }
 
-        .search-input:focus {
+        #searchInput:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
         }
 
-        /* Search button styling */
-        .search-button {
+        .search-btn {
             position: absolute;
-            right: 5px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             background: #667eea;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 50px;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 1rem;
             transition: background 0.3s ease;
         }
 
-        .search-button:hover {
+        .search-btn:hover {
             background: #5a6fd8;
         }
 
-        /* Filter buttons container */
+        /* Filter buttons styling */
         .filters {
             display: flex;
-            gap: 15px;
             flex-wrap: wrap;
+            gap: 10px;
             justify-content: center;
         }
 
-        /* Individual filter button styling */
         .filter-btn {
             padding: 12px 24px;
             border: 2px solid #667eea;
-            background: transparent;
+            background: white;
             color: #667eea;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            font-weight: bold;
         }
 
-        /* Active filter button (when selected) */
-        .filter-btn.active {
+        .filter-btn:hover {
             background: #667eea;
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .filter-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
         }
 
-        /* Results section */
-        .results-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            min-height: 200px;
+        /* Loading and results styling */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            display: none;
         }
 
-        .results-header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e1e5e9;
+        .results {
+            margin-top: 30px;
         }
 
-        .results-count {
-            color: #667eea;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        /* Individual result item styling */
         .result-item {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 10px;
             padding: 20px;
             margin-bottom: 15px;
-            border: 1px solid #e1e5e9;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
         }
 
         .result-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
         .result-title {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: bold;
             color: #333;
-            margin-bottom: 8px;
-        }
-
-        .result-category {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
             margin-bottom: 10px;
         }
 
         .result-snippet {
             color: #666;
-            line-height: 1.5;
+            line-height: 1.6;
             margin-bottom: 10px;
         }
 
-        .result-date {
+        .result-page {
+            font-size: 12px;
             color: #999;
-            font-size: 0.9rem;
         }
 
-        /* No results message */
         .no-results {
             text-align: center;
+            padding: 40px;
             color: #666;
-            font-size: 1.1rem;
-            padding: 40px 20px;
+            font-size: 18px;
         }
 
-        /* Loading animation */
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #667eea;
-            font-size: 1.1rem;
-        }
-
-        /* Responsive design for mobile devices */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .filters {
-                justify-content: center;
-            }
-            
-            .filter-btn {
-                padding: 10px 18px;
-                font-size: 0.9rem;
-            }
+        /* Highlight search terms in results */
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <!-- Main container for the entire website -->
     <div class="container">
-        <!-- Header section with website title -->
-        <div class="header">
-            <h1>Document Search Portal</h1>
-            <p>Search through uploaded documents with advanced filtering</p>
-        </div>
-
-        <!-- Search section containing input and filters -->
+        <h1>📄 Document Search</h1>
+        
+        <!-- Search input section -->
         <div class="search-section">
-            <!-- Search input container -->
             <div class="search-container">
-                <input type="text" 
-                       class="search-input" 
-                       id="searchInput" 
-                       placeholder="Enter your search query..."
-                       autocomplete="off">
-                <button class="search-button" onclick="performSearch()">Search</button>
+                <input type="text" id="searchInput" placeholder="Enter your search terms..." />
+                <button class="search-btn" onclick="performSearch()">Search</button>
             </div>
-
-            <!-- Filter buttons -->
+            
+            <!-- Filter buttons for different categories -->
             <div class="filters">
-                <button class="filter-btn active" data-filter="all" onclick="selectFilter(this, 'all')">
-                    All Documents
-                </button>
-                <button class="filter-btn" data-filter="housing" onclick="selectFilter(this, 'housing')">
-                    Housing
-                </button>
-                <button class="filter-btn" data-filter="education" onclick="selectFilter(this, 'education')">
-                    Education
-                </button>
-                <button class="filter-btn" data-filter="inflation" onclick="selectFilter(this, 'inflation')">
-                    Inflation
-                </button>
-                <button class="filter-btn" data-filter="law-enforcement" onclick="selectFilter(this, 'law-enforcement')">
-                    Law Enforcement
-                </button>
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All Documents</button>
+                <button class="filter-btn" data-filter="housing" onclick="setFilter('housing')">Housing</button>
+                <button class="filter-btn" data-filter="education" onclick="setFilter('education')">Education</button>
+                <button class="filter-btn" data-filter="inflation" onclick="setFilter('inflation')">Inflation</button>
+                <button class="filter-btn" data-filter="law-enforcement" onclick="setFilter('law-enforcement')">Law Enforcement</button>
             </div>
         </div>
 
-        <!-- Results section where search results will be displayed -->
-        <div class="results-section">
-            <div class="results-header">
-                <div class="results-count" id="resultsCount">Ready to search</div>
-            </div>
-            <div id="resultsContainer">
-                <div class="no-results">
-                    Enter a search term above to find documents. Use the filter buttons to narrow your search to specific categories.
-                </div>
-            </div>
+        <!-- Loading indicator -->
+        <div class="loading" id="loading">
+            <p>🔍 Searching documents...</p>
         </div>
+
+        <!-- Search results will appear here -->
+        <div class="results" id="results"></div>
     </div>
 
-    <!-- Add PDF.js library for reading PDF files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // Set PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-        // JavaScript code that makes the website interactive
+        // Global variables to store document data and current filter
+        let documents = [];
+        let currentFilter = 'all';
+        let documentContents = {}; // Store loaded PDF contents
 
-        // Global variables to store current search state
-        let currentFilter = 'all';  // Currently selected filter
-        let currentSearchTerm = ''; // Current search query
-        let searchResults = [];     // Array to store search results
-
-        // Document data - automatically scanned from repository files
-        let documentsData = [];
-        
-        // List of PDF files to search - just add your PDF filenames here
-        const pdfFiles = [
-            'document1.pdf',
-            'housing-report.pdf',
-            'education-policy.pdf',
-            'inflation-analysis.pdf',
-            'law-enforcement-budget.pdf'
-            // Add your PDF filenames here
-        ];
-
-        // Function to handle filter selection
-        // This function runs when a user clicks on a filter button
-        function selectFilter(buttonElement, filterType) {
-            // Remove 'active' class from all filter buttons
+        // Function to set the active filter
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update button appearances
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
             
-            // Add 'active' class to the clicked button
-            buttonElement.classList.add('active');
-            
-            // Update the current filter
-            currentFilter = filterType;
-            
-            // If there's a current search, re-run it with the new filter
-            if (currentSearchTerm) {
+            // If there's a search term, re-run the search with new filter
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value.trim()) {
                 performSearch();
             }
         }
 
-        // Main search function - this is separate so it can be easily replaced later
-        // This function handles all search logic and can be swapped out for more advanced search
-        function performSearch() {
-            // Get the search term from the input field
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            currentSearchTerm = searchTerm;
-
-            // Show loading state
-            showLoading();
-
-            // Simulate search delay (remove this in production)
-            setTimeout(() => {
-                // Perform the actual search
-                const results = searchDocuments(searchTerm, currentFilter);
-                
-                // Display the results
-                displayResults(results, searchTerm);
-            }, 500);
+        // Function to load the list of documents from documents.json
+        async function loadDocuments() {
+            try {
+                const response = await fetch('documents.json');
+                const data = await response.json();
+                documents = data.documents;
+                console.log('Loaded documents:', documents);
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                documents = [];
+            }
         }
 
-        // Function that loads and extracts text from PDF files
-        async function loadDocuments() {
-            documentsData = [];
+        // Function to load and extract text from a PDF file
+        async function loadPDFContent(filename) {
+            // If we already loaded this PDF, return the cached content
+            if (documentContents[filename]) {
+                return documentContents[filename];
+            }
+
+            try {
+                // Load the PDF file
+                const pdf = await pdfjsLib.getDocument(filename).promise;
+                let fullText = '';
+
+                // Extract text from each page of the PDF
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + ' ';
+                }
+
+                // Cache the content so we don't have to load it again
+                documentContents[filename] = fullText;
+                return fullText;
+            } catch (error) {
+                console.error(`Error loading PDF ${filename}:`, error);
+                return '';
+            }
+        }
+
+        // Function to determine if a document matches the current filter
+        function matchesFilter(content, filter) {
+            if (filter === 'all') return true;
             
-            for (const filename of pdfFiles) {
-                try {
-                    // Load PDF file
-                    const response = await fetch(filename);
-                    if (!response.ok) continue;
+            const lowerContent = content.toLowerCase();
+            
+            // Define keywords for each filter category
+            const filterKeywords = {
+                'housing': ['housing', 'rent', 'mortgage', 'property', 'real estate', 'apartment', 'home', 'landlord', 'tenant', 'zoning'],
+                'education': ['education', 'school', 'university', 'college', 'student', 'teacher', 'curriculum', 'learning', 'academic'],
+                'inflation': ['inflation', 'price', 'cost', 'economy', 'economic', 'dollar', 'spending', 'budget', 'financial'],
+                'law-enforcement': ['police', 'law enforcement', 'crime', 'justice', 'court', 'legal', 'attorney', 'prosecution', 'investigation']
+            };
+            
+            const keywords = filterKeywords[filter] || [];
+            return keywords.some(keyword => lowerContent.includes(keyword));
+        }
+
+        // Function to highlight search terms in text
+        function highlightSearchTerms(text, searchTerms) {
+            let highlightedText = text;
+            searchTerms.forEach(term => {
+                const regex = new RegExp(`(${term})`, 'gi');
+                highlightedText = highlightedText.replace(regex, '<span class="highlight">$1</span>');
+            });
+            return highlightedText;
+        }
+
+        // Function to create a snippet of text around search terms
+        function createSnippet(content, searchTerms, maxLength = 300) {
+            const lowerContent = content.toLowerCase();
+            let bestPosition = 0;
+            let bestScore = 0;
+
+            // Find the position with the most search term matches
+            for (const term of searchTerms) {
+                const index = lowerContent.indexOf(term.toLowerCase());
+                if (index !== -1) {
+                    const score = searchTerms.filter(t => 
+                        lowerContent.substring(Math.max(0, index - 100), index + 100)
+                            .includes(t.toLowerCase())
+                    ).length;
                     
-                    const arrayBuffer = await response.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                    
-                    // Extract text from all pages
-                    let fullText = '';
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map(item => item.str).join(' ');
-                        fullText += pageText + ' ';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPosition = Math.max(0, index - 50);
                     }
-                    
-                    // Auto-detect category from filename and content
-                    let category = 'all';
-                    const testText = (filename + ' ' + fullText).toLowerCase();
-                    
-                    if (testText.includes('housing')) category = 'housing';
-                    else if (testText.includes('education')) category = 'education';
-                    else if (testText.includes('inflation')) category = 'inflation';
-                    else if (testText.includes('law') || testText.includes('enforcement') || testText.includes('police')) {
-                        category = 'law-enforcement';
-                    }
-                    
-                    documentsData.push({
-                        title: filename.replace('.pdf', '').replace(/[-_]/g, ' '),
-                        category: category,
-                        content: fullText.trim(),
-                        date: new Date().toISOString().split('T')[0],
-                        filename: filename
-                    });
-                    
-                    console.log('Loaded PDF:', filename);
-                } catch (error) {
-                    console.log('Could not load PDF:', filename, error);
                 }
             }
+
+            // Create snippet around the best position
+            const snippet = content.substring(bestPosition, bestPosition + maxLength);
+            const trimmedSnippet = bestPosition > 0 ? '...' + snippet : snippet;
             
-            if (documentsData.length === 0) {
-                document.getElementById('resultsContainer').innerHTML = `
-                    <div class="no-results">
-                        <strong>No PDFs found</strong><br>
-                        Make sure your PDF files are uploaded and listed in the pdfFiles array.
-                        <br><br>
-                        <strong>Looking for:</strong><br>
-                        ${pdfFiles.join('<br>')}
-                    </div>
-                `;
-            } else {
-                document.getElementById('resultsContainer').innerHTML = `
-                    <div class="no-results">
-                        Successfully loaded ${documentsData.length} PDF(s). Enter a search term above to begin searching.
-                    </div>
-                `;
-            }
+            return highlightSearchTerms(trimmedSnippet, searchTerms);
         }
 
-        // Function that performs the actual document searching
-        function searchDocuments(searchTerm, filter) {
-            if (!searchTerm || documentsData.length === 0) {
-                return [];
-            }
-
-            let documentsToSearch = documentsData;
-
-            // Apply filter if not 'all'
-            if (filter !== 'all') {
-                documentsToSearch = documentsData.filter(doc => doc.category === filter);
-            }
-
-            // Search through documents
-            const results = documentsToSearch.filter(doc => {
-                // Convert search term and document content to lowercase for case-insensitive search
-                const searchLower = searchTerm.toLowerCase();
-                const titleMatch = doc.title.toLowerCase().includes(searchLower);
-                const contentMatch = doc.content ? doc.content.toLowerCase().includes(searchLower) : false;
-                
-                return titleMatch || contentMatch;
-            });
-
-            return results;
-        }
-
-        // Function to display search results on the page
-        function displayResults(results, searchTerm) {
-            const resultsContainer = document.getElementById('resultsContainer');
-            const resultsCount = document.getElementById('resultsCount');
-
-            // Update results count
-            const filterText = currentFilter === 'all' ? '' : ` in ${currentFilter.replace('-', ' ')}`;
-            resultsCount.textContent = `Found ${results.length} result(s) for "${searchTerm}"${filterText}`;
-
-            // Clear previous results
-            resultsContainer.innerHTML = '';
-
-            if (results.length === 0) {
-                // Show no results message
-                resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        No documents found for "${searchTerm}"${filterText}. 
-                        Try adjusting your search terms or selecting a different filter.
-                    </div>
-                `;
+        // Main search function
+        async function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(term => term.length > 0);
+            
+            // Don't search if no terms entered
+            if (searchTerms.length === 0) {
+                document.getElementById('results').innerHTML = '';
                 return;
             }
 
-            // Create HTML for each result
-            results.forEach(result => {
-                const resultElement = document.createElement('div');
-                resultElement.className = 'result-item';
-                
-                // Create the HTML content for this result
-                resultElement.innerHTML = `
-                    <div class="result-title">${result.title}</div>
-                    <div class="result-category">${result.category.replace('-', ' ').toUpperCase()}</div>
-                    <div class="result-snippet">${result.content}</div>
-                    <div class="result-date">Document: ${result.filename} | Date: ${formatDate(result.date)}</div>
-                `;
-                
-                // Add click event to open document
-                resultElement.addEventListener('click', () => {
-                    // Open the document file (works for PDF, images, text files)
-                    window.open(result.filename, '_blank');
-                });
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
 
-                // Add the result to the container
-                resultsContainer.appendChild(resultElement);
-            });
-        }
+            const results = [];
 
-        // Function to show loading state while searching
-        function showLoading() {
-            const resultsContainer = document.getElementById('resultsContainer');
-            const resultsCount = document.getElementById('resultsCount');
-            
-            resultsCount.textContent = 'Searching...';
-            resultsContainer.innerHTML = `
-                <div class="loading">
-                    🔍 Searching documents...
-                </div>
-            `;
-        }
+            // Search through each document
+            for (const doc of documents) {
+                try {
+                    // Load the PDF content
+                    const content = await loadPDFContent(doc.filename);
+                    
+                    if (!content) continue;
 
-        // Helper function to format dates nicely
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        }
+                    // Check if document matches current filter
+                    if (!matchesFilter(content, currentFilter)) continue;
 
-        // Event listener for Enter key in search input
-        document.getElementById('searchInput').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                performSearch();
+                    const lowerContent = content.toLowerCase();
+                    
+                    // Check if any search terms are found in the document
+                    const matchingTerms = searchTerms.filter(term => 
+                        lowerContent.includes(term)
+                    );
+
+                    if (matchingTerms.length > 0) {
+                        // Calculate relevance score based on term frequency
+                        let score = 0;
+                        matchingTerms.forEach(term => {
+                            const matches = (lowerContent.match(new RegExp(term, 'g')) || []).length;
+                            score += matches;
+                        });
+
+                        // Create result object
+                        results.push({
+                            filename: doc.filename,
+                            title: doc.filename.replace('.pdf', '').replace(/[-_]/g, ' '),
+                            snippet: createSnippet(content, matchingTerms),
+                            score: score,
+                            matchingTerms: matchingTerms
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error processing ${doc.filename}:`, error);
+                }
             }
-        });
 
-        // Initialize the page when it loads
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+
+            // Sort results by relevance score
+            results.sort((a, b) => b.score - a.score);
+
+            // Display results
+            displayResults(results);
+        }
+
+        // Function to display search results
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No documents found matching your search.</div>';
+                return;
+            }
+
+            let html = `<h3>Found ${results.length} document(s):</h3>`;
+            
+            results.forEach(result => {
+                html += `
+                    <div class="result-item">
+                        <div class="result-title">${result.title}</div>
+                        <div class="result-snippet">${result.snippet}</div>
+                        <div class="result-page">Document: ${result.filename}</div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        // Function to handle Enter key press in search input
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Document Search Portal loaded successfully');
-            // Load documents from documents.json file
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Load the documents when the page loads
             loadDocuments();
         });
-
-        // ========================================
-        // REPLACE THIS SECTION FOR ADVANCED SEARCH
-        // ========================================
-        // 
-        // To implement more advanced search functionality:
-        // 1. Replace the sampleDocuments array with code that loads your actual documents
-        // 2. Replace the searchDocuments() function with your advanced search logic
-        // 3. If needed, modify the displayResults() function to show additional information
-        // 4. The selectFilter() and performSearch() functions can stay the same
-        //
-        // Example of what you might replace:
-        /*
-        async function loadDocuments() {
-            // Load documents from your backend/GitHub repo
-            const response = await fetch('/api/documents');
-            return await response.json();
-        }
-
-        async function searchDocuments(searchTerm, filter) {
-            // Your advanced search logic here
-            // This might include API calls, complex filtering, etc.
-            const response = await fetch(`/api/search?q=${searchTerm}&filter=${filter}`);
-            return await response.json();
-        }
-        */
     </script>
 </body>
 </html>
