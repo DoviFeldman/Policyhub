@@ -297,38 +297,8 @@
         let currentSearchTerm = ''; // Current search query
         let searchResults = [];     // Array to store search results
 
-        // This is sample data - replace this with your actual document data
-        // Each document should have: title, category, content, date, and filename
-        const sampleDocuments = [
-            {
-                title: "Housing Policy Report 2024",
-                category: "housing",
-                content: "Comprehensive analysis of housing policies and their impact on local communities. This report examines affordable housing initiatives, zoning regulations, and market trends.",
-                date: "2024-03-15",
-                filename: "housing-policy-2024.pdf"
-            },
-            {
-                title: "Educational Reform Proposal",
-                category: "education", 
-                content: "Detailed proposal for educational system improvements including curriculum updates, teacher training programs, and technology integration in classrooms.",
-                date: "2024-02-28",
-                filename: "education-reform-proposal.pdf"
-            },
-            {
-                title: "Inflation Impact Study",
-                category: "inflation",
-                content: "Economic analysis of inflation trends and their effects on consumer spending, business operations, and government fiscal policy decisions.",
-                date: "2024-01-20",
-                filename: "inflation-study-2024.pdf"
-            },
-            {
-                title: "Law Enforcement Budget Analysis",
-                category: "law-enforcement",
-                content: "Budget breakdown and analysis for law enforcement agencies, including personnel costs, equipment purchases, and community program funding.",
-                date: "2024-04-10",
-                filename: "law-enforcement-budget.pdf"
-            }
-        ];
+        // Document data - automatically loaded from documents.json file
+        let documentsData = [];
 
         // Function to handle filter selection
         // This function runs when a user clicks on a filter button
@@ -370,18 +340,40 @@
             }, 500);
         }
 
+        // Function that loads document metadata from documents.json file
+        async function loadDocuments() {
+            try {
+                const response = await fetch('documents.json');
+                if (!response.ok) {
+                    throw new Error('Documents.json not found');
+                }
+                documentsData = await response.json();
+                console.log('Loaded', documentsData.length, 'documents');
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                // Show error message to user
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="no-results">
+                        <strong>Error loading documents</strong><br>
+                        Make sure you have uploaded a 'documents.json' file with your document metadata.
+                        <br><br>
+                        See the GitHub repo README for setup instructions.
+                    </div>
+                `;
+            }
+        }
+
         // Function that performs the actual document searching
-        // Replace this function with your advanced search logic when ready
         function searchDocuments(searchTerm, filter) {
-            if (!searchTerm) {
+            if (!searchTerm || documentsData.length === 0) {
                 return [];
             }
 
-            let documentsToSearch = sampleDocuments;
+            let documentsToSearch = documentsData;
 
             // Apply filter if not 'all'
             if (filter !== 'all') {
-                documentsToSearch = sampleDocuments.filter(doc => doc.category === filter);
+                documentsToSearch = documentsData.filter(doc => doc.category === filter);
             }
 
             // Search through documents
@@ -389,7 +381,7 @@
                 // Convert search term and document content to lowercase for case-insensitive search
                 const searchLower = searchTerm.toLowerCase();
                 const titleMatch = doc.title.toLowerCase().includes(searchLower);
-                const contentMatch = doc.content.toLowerCase().includes(searchLower);
+                const contentMatch = doc.content ? doc.content.toLowerCase().includes(searchLower) : false;
                 
                 return titleMatch || contentMatch;
             });
@@ -433,10 +425,10 @@
                     <div class="result-date">Document: ${result.filename} | Date: ${formatDate(result.date)}</div>
                 `;
                 
-                // Add click event to open/download document (customize this as needed)
+                // Add click event to open document
                 resultElement.addEventListener('click', () => {
-                    // This is where you would handle opening or downloading the document
-                    alert(`Opening: ${result.filename}\n\nIn a real implementation, this would open or download the document.`);
+                    // Open the document file (works for PDF, images, text files)
+                    window.open(result.filename, '_blank');
                 });
 
                 // Add the result to the container
@@ -477,7 +469,8 @@
         // Initialize the page when it loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Document Search Portal loaded successfully');
-            // You can add any initialization code here
+            // Load documents from documents.json file
+            loadDocuments();
         });
 
         // ========================================
