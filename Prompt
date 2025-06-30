@@ -1,0 +1,8 @@
+In Claude Sonnet 4: 
+
+
+Make me a website code in html that i can just copy paste and deploy on github pages. i will add documents to the github repo, and the point of the website is to search all the documents that i uploaded in the backend. you cant upload documents in the front end. the only thing in the front end is the search and filters. under the search bar there are a few filters: housing, education, inflation, law enforcement. the filters work that when i search the word it only brings up the results that relate to that filter. like when i search someones name and select the housing filter it only brings up their articles that talk about housing. make the search a separate function so it can be replaced with a more advanced search later Write comments in the code so that someone who doesnt know how to code can read it and understand what each part does. Thank you. add another file that whenever i upload a new pdf i can add the pdf name to that file so that the website has access to search it. make it simple
+
+make it that i can search the whole PDF when i upload it to github, no content section or date or anything like that.
+
+just add the name of the PDF in the second file and the search will be able to access it.
